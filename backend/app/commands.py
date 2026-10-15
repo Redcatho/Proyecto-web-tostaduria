@@ -1,10 +1,12 @@
-import os
+﻿import os
+from datetime import date
+from decimal import Decimal
 
 import click
 from flask import Flask
 
 from app.extensions import db
-from app.models import User
+from app.models import ExchangeRate, InventoryBalance, InventoryLocation, Product, ProductVariant, User
 from app.security import audit, get_role, hash_password
 from app.services.bcv import BcvRateError, sync_official_bcv_rate
 
@@ -40,6 +42,52 @@ def register_commands(app: Flask) -> None:
             else:
                 click.echo(f"Administrator account already exists for {email}.")
         db.session.commit()
+
+    @app.cli.command("seed-initial-data")
+    def seed_initial_data() -> None:
+        """Seed the database with initial products, variants and a default inventory location."""
+        if db.session.scalar(db.select(db.func.count()).select_from(Product)) > 0:
+            click.echo("Products already exist. Skipping seed.")
+            return
+
+        loc = db.session.scalar(db.select(InventoryLocation).where(InventoryLocation.name == "Almacén principal"))
+        if loc is None:
+            loc = InventoryLocation(name="Almacén principal", is_active=True)
+            db.session.add(loc)
+            db.session.flush()
+
+        products = [
+            {"slug": "cafe-filtrado", "line": "commercial", "name": "Café Filtrado 250g", "description": "Café de especialidad en grano, ideal para filtrado. Notas cítricas y chocolate.", "coffee_type": "Arábica", "origin": "Venezuela - Mérida", "variants": [{"sku": "FIL-001", "name": "Bolsa 250g", "sale_unit": "bulto", "inventory_unit": "kg", "unit_weight_kg": "0.250", "packages_per_unit": 40, "price_usd": "8.50", "low_stock_threshold": "10", "stock": "40"}]},
+            {"slug": "cafe-espresso", "line": "commercial", "name": "Café Espresso 500g", "description": "Mezcla equilibrada para espresso. Cuerpo medio, aroma intenso.", "coffee_type": "Arábica 80% / Robusta 20%", "origin": "Venezuela - Táchira", "variants": [{"sku": "ESP-001", "name": "Bolsa 500g", "sale_unit": "bulto", "inventory_unit": "kg", "unit_weight_kg": "0.500", "packages_per_unit": 20, "price_usd": "14.00", "low_stock_threshold": "10", "stock": "30"}]},
+            {"slug": "cafe-premium", "line": "commercial", "name": "Café Premium 250g", "description": "Café de origen único, variedad bourbon. Notas florales y miel.", "coffee_type": "Bourbon", "origin": "Venezuela - Aragua", "variants": [{"sku": "PRM-001", "name": "Bolsa 250g", "sale_unit": "bulto", "inventory_unit": "kg", "unit_weight_kg": "0.250", "packages_per_unit": 40, "price_usd": "12.00", "low_stock_threshold": "5", "stock": "25"}]},
+            {"slug": "cafe-grano-especial", "line": "cafeteria", "name": "Café Especial en Grano", "description": "Café de especialidad en grano entero. Para cafeterías que buscan calidad superior.", "coffee_type": "Arábica", "origin": "Venezuela - Mérida", "variants": [{"sku": "GRA-001", "name": "Saco 5 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "5.000", "price_usd": "45.00", "low_stock_threshold": "10", "stock": "20"}, {"sku": "GRA-002", "name": "Saco 15 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "15.000", "price_usd": "125.00", "low_stock_threshold": "5", "stock": "10"}]},
+            {"slug": "cafe-grano-premium", "line": "cafeteria", "name": "Café Premium Mezcla Casa", "description": "Nuestra mezcla insignia. Cuerpo completo, acidez equilibrada y final dulce.", "coffee_type": "Arábica", "origin": "Venezuela", "variants": [{"sku": "PRE-001", "name": "Saco 5 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "5.000", "price_usd": "55.00", "low_stock_threshold": "10", "stock": "15"}, {"sku": "PRE-002", "name": "Saco 15 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "15.000", "price_usd": "150.00", "low_stock_threshold": "5", "stock": "8"}]},
+            {"slug": "cafe-organico", "line": "cafeteria", "name": "Café Orgánico de Finca", "description": "Proveniente de fincas certificadas. Notas frutales y chocolate amargo.", "coffee_type": "Arábica Orgánico", "origin": "Venezuela - Monagas", "variants": [{"sku": "ORG-001", "name": "Saco 5 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "5.000", "price_usd": "60.00", "low_stock_threshold": "10", "stock": "12"}, {"sku": "ORG-002", "name": "Saco 15 kg", "sale_unit": "kg", "inventory_unit": "kg", "unit_weight_kg": "15.000", "price_usd": "160.00", "low_stock_threshold": "5", "stock": "6"}]},
+        ]
+
+        for data in products:
+            variants_data = data.pop("variants", [])
+            product = Product(**data)
+            db.session.add(product)
+            db.session.flush()
+            for vdata in variants_data:
+                initial_stock = Decimal(vdata.pop("stock", "0"))
+                variant = ProductVariant(product_id=product.id, **vdata)
+                db.session.add(variant)
+                db.session.flush()
+                if initial_stock > 0 and loc:
+                    balance = InventoryBalance(variant_id=variant.id, location_id=loc.id, quantity=initial_stock)
+                    db.session.add(balance)
+            click.echo(f"  \u2713 {product.name} ({product.line})")
+
+        rate = db.session.scalar(db.select(ExchangeRate).where(ExchangeRate.currency == "USD", ExchangeRate.effective_date == date.today()))
+        if rate is None:
+            rate = ExchangeRate(currency="USD", rate_ves="50.00", effective_date=date.today(), source_url="seed://initial", source_method="seed")
+            db.session.add(rate)
+            click.echo("  \u2713 Tasa BCV inicial: 50.00 VES")
+
+        db.session.commit()
+        click.echo("Seed completado. 6 productos creados.")
 
     @app.cli.command("sync-bcv-rate")
     def sync_bcv_rate() -> None:
