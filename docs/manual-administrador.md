@@ -1,4 +1,4 @@
-# Manual del Administrador — Tostaduria Platform
+﻿# Manual del Administrador — Tostaduria Platform
 
 **Versión:** 0.1.0 · **Última actualización:** Octubre 2026
 
@@ -6,27 +6,27 @@
 
 ## Índice
 
-1. [Visión General](#1-visión-general)
-2. [Arquitectura](#2-arquitectura)
-3. [Roles y Permisos](#3-roles-y-permisos)
-4. [Flujo Completo del Sistema](#4-flujo-completo-del-sistema)
-5. [Pantallas y Funcionalidades](#5-pantallas-y-funcionalidades)
-6. [Gestión de Inventario](#6-gestión-de-inventario)
-7. [Gestión de Pedidos](#7-gestión-de-pedidos)
-8. [Tasa BCV y Precios](#8-tasa-bcv-y-precios)
-9. [Notificaciones](#9-notificaciones)
-10. [Seguridad y Buenas Prácticas](#10-seguridad-y-buenas-prácticas)
-11. [Solución de Problemas](#11-solución-de-problemas)
+1. Visión General
+2. Arquitectura
+3. Roles y Permisos
+4. Flujo Completo del Sistema
+5. Pantallas y Funcionalidades
+6. Gestión de Inventario
+7. Gestión de Pedidos
+8. Tasa BCV y Precios
+9. Notificaciones
+10. Seguridad y Buenas Prácticas
+11. Solución de Problemas
 
 ---
 
 ## 1. Visión General
 
-Tostaduria Platform es un sistema B2B (Business-to-Business) para la gestión comercial y operativa de una tostaduría de café. Permite a clientes comerciales y cafeterías realizar pedidos de café en grano o presentaciones comerciales, y al equipo interno gestionar la producción, el inventario y los despachos.
+Tostaduria Platform es un sistema B2B para la gestión comercial y operativa de una tostaduría de café. Permite a clientes (cafeterías y comercios) realizar pedidos de café en grano o presentaciones comerciales, y al equipo interno gestionar producción, inventario, pagos y despachos desde un solo lugar.
 
 ### Propósito
 
-- Centralizar las ventas B2B en un solo lugar.
+- Centralizar las ventas B2B eliminando WhatsApp, correos sueltos y hojas de cálculo.
 - Automatizar cotizaciones, registro de pagos y seguimiento de pedidos.
 - Proveer al equipo operativo herramientas para gestionar inventario y producción.
 - Mantener un registro auditable de todas las transacciones.
@@ -35,15 +35,17 @@ Tostaduria Platform es un sistema B2B (Business-to-Business) para la gestión co
 
 ## 2. Arquitectura
 
-Navegador → Vercel (React) → Render (Flask API) → PostgreSQL
-                              |
-                              +→ Redis → RQ Worker
+Navegador → Vercel (React 19 + TypeScript + Vite) → Render (Flask 3 + SQLAlchemy + Alembic) → PostgreSQL
+                                                                      |
+                                                                      +→ Redis → RQ Worker
 
-- **Frontend:** React + TypeScript + Vite, desplegado en Vercel.
-- **Backend:** API Flask + SQLAlchemy + Alembic, desplegado en Render.
-- **Base de datos:** PostgreSQL administrada en Render.
-- **Cache/Tareas:** Redis y RQ para tareas asíncronas (notificaciones, sincronización BCV).
-- **Almacenamiento:** Cloudflare R2 (S3-compatible) para comprobantes de pago e imágenes de producto.
+- Frontend: React 19 + TypeScript + Vite, desplegado en Vercel.
+- Backend: API Flask + SQLAlchemy + Alembic, desplegado en Render.
+- Base de datos: PostgreSQL administrada en Render (plan básico 256 MB).
+- Cache/Tareas: Redis y RQ para tareas asíncronas (notificaciones, sincronización BCV).
+- Almacenamiento: Cloudflare R2 (S3-compatible, opcional) para comprobantes de pago e imágenes de producto.
+
+> Nota: Sin Cloudflare R2 no funcionan la subida de comprobantes ni las imágenes de producto; el resto de la plataforma opera con normalidad.
 
 ---
 
@@ -57,24 +59,24 @@ Navegador → Vercel (React) → Render (Flask API) → PostgreSQL
 | sales | Catálogo, pedidos, revisión de pagos | Equipo de ventas |
 | dispatch | Pedidos, despacho, entregas | Personal de despacho |
 
-### Permisos detallados por rol
+### Matriz de permisos
 
-| Acción | admin | operator | sales | dispatch | customer |
-|---|---|---|---|---|---|
-| Ver catálogo | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Comprar | ✅ | — | — | — | ✅ |
-| Gestionar usuarios | ✅ | — | — | — | — |
-| Aprobar crédito | ✅ | — | — | — | — |
-| Ver inventario | ✅ | ✅ | ✅ | — | — |
-| Registrar movimientos | ✅ | ✅ | — | — | — |
-| Iniciar producción | ✅ | ✅ | — | — | — |
-| Registrar despacho | ✅ | — | — | ✅ | — |
-| Confirmar entrega | ✅ | — | — | ✅ | — |
-| Revisar pagos | ✅ | — | ✅ | — | — |
-| Cancelar pedidos | ✅ | — | — | — | — |
-| Procesar devoluciones | ✅ | — | — | — | — |
-| Gestionar imágenes | ✅ | — | — | — | — |
-| Sincronizar tasa BCV | ✅ | — | ✅ | — | — |
+Acción | admin | operator | sales | dispatch | customer
+Ver catálogo público | ✅ | ✅ | ✅ | ✅ | ✅
+Comprar | ✅ | — | — | — | ✅
+Gestionar usuarios internos | ✅ | — | — | — | —
+Aprobar/rechazar crédito | ✅ | — | — | — | —
+Ver inventario y stock | ✅ | ✅ | ✅ | — | —
+Registrar movimientos | ✅ | ✅ | — | — | —
+Iniciar/completar producción | ✅ | ✅ | — | — | —
+Fijar estimado de entrega | ✅ | — | ✅ | — | —
+Registrar guía de despacho | ✅ | — | — | ✅ | —
+Confirmar entrega | ✅ | — | — | ✅ | —
+Revisar y aprobar pagos | ✅ | — | ✅ | — | —
+Cancelar pedidos | ✅ | — | — | — | —
+Procesar devoluciones | ✅ | — | — | — | —
+Gestionar imágenes de producto | ✅ | — | — | — | —
+Sincronizar/registrar tasa BCV | ✅ | — | ✅ | — | —
 
 ---
 
@@ -82,227 +84,123 @@ Navegador → Vercel (React) → Render (Flask API) → PostgreSQL
 
 ### 4.1 Registro de Cliente
 
-1. El cliente entra a la página principal y hace clic en **Ingresar** → **Regístrate**.
-2. Completa: nombre, correo, contraseña (mínimo 6 caracteres) y teléfono.
-3. Recibe confirmación y puede iniciar sesión inmediatamente.
+1. El cliente entra a la página principal y hace clic en Ingresar / Regístrate.
+2. Completa nombre, correo, contraseña (mínimo 6 caracteres) y teléfono.
+3. La cuenta se crea con rol customer y el cliente puede iniciar sesión inmediatamente.
 
 ### 4.2 Perfil Comercial
 
-1. Una vez autenticado, el cliente accede a **Mi perfil**.
-2. Debe completar:
-   - **Datos personales:** nombre, teléfono.
-   - **Empresa:** nombre comercial, RIF, tipo de negocio (cafetería, supermercado, mayorista), responsable, correo y teléfono de contacto.
-   - **Dirección:** al menos una dirección de entrega.
-3. Una vez completa la empresa y tiene al menos una dirección, su perfil está listo.
+1. El cliente accede a Mi perfil.
+2. Debe completar: contacto (nombre, teléfono), empresa (nombre, RIF, tipo, contacto) y dirección.
+3. Sin perfil completo no puede solicitar crédito ni emitir cotizaciones.
 
-### 4.3 Solicitud de Crédito (opcional)
+### 4.3 Solicitud de Crédito
 
-1. Desde el perfil, el cliente puede solicitar crédito comercial.
-2. Selecciona: plazo (7, 15 o 30 días), límite en USD y justificación.
-3. Un administrador revisa y aprueba/rechaza desde **Administración**.
-4. Si se aprueba, el cliente puede usar **Crédito aprobado** como condición de pago.
+1. Desde el perfil, el cliente solicita crédito (plazo 7/15/30 días, límite USD, justificación).
+2. Admin revisa desde Administración y aprueba o rechaza.
 
 ### 4.4 Compra
 
-1. El cliente navega el **Catálogo**, filtra por Todo, Comercial o Cafeterías.
-2. Usa el **stepper numérico** para seleccionar cantidad y perfil de tostado (cafeterías).
-3. Hace clic en **Agregar al carrito** — aparece un mensaje de confirmación con opciones:
-   - **Ir al carrito** → lo lleva al carrito.
-   - **Seguir comprando** → el mensaje desaparece.
-4. En el carrito puede ajustar cantidades con el stepper, eliminar productos y ver el resumen.
+1. Catálogo con stepper numérico (+/-). Cafeterías requieren perfil de tostado.
+2. Agregar al carrito muestra confirmación con Ir al carrito o Seguir comprando.
+3. Carrito muestra resumen USD/VES y badge con cantidad en la barra.
 
 ### 4.5 Cotización
 
-1. Desde el carrito, hace clic en **Continuar a cotización**.
-2. Selecciona:
-   - **Modalidad de entrega:** retiro en planta, entrega propia en Caracas, paquetería nacional.
-   - **Dirección de entrega** (si aplica).
-   - **Condición de pago:** anticipo 50%, pago completo o crédito aprobado.
-3. El sistema genera una cotización válida por 24 horas.
-4. El cliente puede descargar la cotización en PDF.
+1. Continuar a cotización: validación de carrito, tasa BCV y perfil.
+2. Seleccionar entrega, dirección y condición de pago.
+3. Cotización válida 24 horas. Descargable en PDF.
 
 ### 4.6 Aceptación y Pago
 
-1. El cliente revisa la cotización y hace clic en **Aceptar y crear pedido**.
-2. Si eligió **crédito aprobado**, el pedido se confirma automáticamente si hay cupo disponible.
-3. Si eligió **anticipo o pago completo**, el pedido queda como `pending_payment`.
-4. El cliente sube un **comprobante de pago** (PDF, JPG, PNG):
-   - Selecciona método, moneda (USD/VES), monto, referencia y archivo.
-   - El archivo se almacena de forma privada en el bucket S3.
+1. Aceptar y crear pedido. Crédito se confirma automático si hay cupo.
+2. Anticipo/pago completo queda como pending_payment.
+3. Cliente sube comprobante (PDF/JPG/PNG, máx 10 MB).
 
 ### 4.7 Revisión de Pago
 
-1. Un administrador o ventas ve el pedido con el comprobante desde **Operación → Pedidos**.
-2. Revisa el comprobante (puede ver la imagen via enlace temporal) y:
-   - **Aprueba:** el pago se registra como verificado.
-   - **Rechaza:** debe indicar un motivo, el cliente lo verá en el detalle del pedido.
-3. Si los pagos verificados cubren el monto requerido, el pedido pasa a `confirmed`.
+1. Admin/ventas revisa desde Operacion / Pedidos.
+2. Aprueba (pedido pasa a confirmed) o rechaza (con motivo visible al cliente).
 
 ### 4.8 Producción
 
-1. Un operador o administrador selecciona un pedido `confirmed`.
-2. Hace clic en **Iniciar producción**:
-   - El sistema descuenta el inventario automáticamente.
-   - El pedido pasa a `in_production`.
-3. Al terminar la producción, hace clic en **Completar producción**:
-   - El pedido pasa a `ready`.
+1. Iniciar producción: descuenta inventario, pasa a in_production.
+2. Si falta stock: pending_stock. Reintentar tras reponer.
+3. Completar producción: pasa a ready.
 
 ### 4.9 Despacho y Entrega
 
-1. El personal de despacho ve los pedidos `ready`.
-2. Registra la **guía de despacho**: transportista, número de tracking y nota.
-   - El pedido pasa a `dispatched`.
-3. Al confirmar la entrega, el pedido pasa a `delivered`.
+1. Registrar guía (transportista, tracking) → dispatched.
+2. Confirmar entrega → delivered.
 
 ### 4.10 Devolución
 
-1. Solo un administrador puede procesar devoluciones sobre pedidos `delivered`.
-2. Indica el motivo y la cantidad a devolver.
-3. El sistema repone el inventario automáticamente y el pedido pasa a `returned`.
+1. Admin sobre pedidos delivered. Motivo + cantidades.
+2. Sistema repone inventario → returned.
 
 ---
 
 ## 5. Pantallas y Funcionalidades
 
-### 5.1 Página Principal (Catálogo Público)
-
-- **Acceso:** Público (sin autenticación)
-- **Funcionalidades:**
-  - Visualización de productos con imágenes.
-  - Filtro por línea (Todo, Comercial, Cafeterías).
-  - Stepper numérico para seleccionar cantidad.
-  - Selector de perfil de tostado (solo cafeterías).
-  - Botón **Agregar al carrito** (requiere autenticación).
-  - **Calculadora USD → VES** con la tasa BCV vigente.
-  - Tasa BCV del día mostrada en la cabecera.
-
-### 5.2 Dashboard (Usuario autenticado)
-
-- Muestra la tasa BCV del día.
-- Enlace rápido a completar el perfil.
-
-### 5.3 Perfil
-
-- **URL:** /perfil
-- **Secciones:**
-  - **Contacto:** nombre y teléfono.
-  - **Empresa:** datos fiscales y de contacto.
-  - **Direcciones:** agregar y listar direcciones.
-  - **Crédito:** solicitar crédito, ver estado de solicitudes y términos activos.
-
-### 5.4 Administración
-
-- **URL:** /administracion — Solo admin
-- **Funcionalidades:**
-  - **Crear cuentas internas:** registrar operadores, ventas, despacho y administradores.
-  - **Gestionar usuarios:** ver lista, suspender/activar cuentas.
-  - **Solicitudes de crédito:** aprobar o rechazar con plazos y límites.
-
-### 5.5 Operación — Catálogo, Stock y Tasa
-
-- **URL:** /operacion — admin, operator, sales
-- **Secciones:**
-  - **Productos y existencias:** tabla con stock actual, umbral bajo (naranja) y stock cero (rojo).
-  - **Registrar movimiento:** formulario para ingresar, sacar, ajustar o mermar inventario.
-  - **Historial:** últimos 15 movimientos registrados.
-  - **Imagen de empaque:** subir, reemplazar o eliminar imágenes de producto.
-  - **Tasa BCV:** sincronizar desde el BCV o registrar tasa manual.
-
-### 5.6 Operación — Pedidos
-
-- **URL:** /operacion/pedidos — admin, operator, dispatch, sales
-- **Funcionalidades:**
-  - Filtro por estado (confirmed, in_production, ready, dispatched, delivered, etc.).
-  - Gestión de pedido seleccionado:
-    - Ver productos y cantidades.
-    - **Fijar estimado de entrega** (admin/sales).
-    - **Iniciar producción** (admin/operator).
-    - **Completar producción** (admin/operator).
-    - **Registrar despacho** (admin/dispatch).
-    - **Confirmar entrega** (admin/dispatch).
-    - **Procesar devolución** (admin).
-    - **Cancelar pedido** (admin).
-
-### 5.7 Carrito
-
-- **URL:** /carrito
-- Stepper numérico para ajustar cantidades.
-- Botón eliminar por producto.
-- Resumen con subtotal, descuento, total USD y VES.
-- Botón **Continuar a cotización**.
-
-### 5.8 Pedidos (Cliente)
-
-- **URL:** /pedidos
-- Lista de pedidos con estado, total y saldo pendiente.
-- Detalle del pedido: productos, progreso, comprobantes, guía de despacho.
-- Subir comprobante de pago.
-- Descargar pedido PDF.
-- Ver estimado de entrega.
+- / (raíz): Catálogo público con stepper, calculadora USD/VES, tasa BCV.
+- / (autenticado): Dashboard con tasa BCV y acceso rápido.
+- /perfil: Contacto, empresa, direcciones, crédito.
+- /administracion: Solo admin. Usuarios, roles, crédito.
+- /operacion: Admin/operator/sales. Stock, movimientos, historial, imágenes, tasa BCV.
+- /operacion/pedidos: Admin/operator/dispatch/sales. Filtro, producción, despacho, devoluciones.
+- /carrito: Stepper, eliminar, resumen USD/VES.
+- /pedidos: Cliente. Lista, detalle, progreso, comprobantes, guía, PDF.
 
 ---
 
 ## 6. Gestión de Inventario
 
-### 6.1 Propósito
+Inventario informativo (no bloquea compras). Control interno con alertas visuales.
 
-El inventario es **informativo para el personal interno**. No bloquea las compras de los clientes. Sirve para llevar control de existencias, registrar movimientos e identificar productos con stock bajo.
+Movimientos: Ingreso (+), Salida (-), Merma (-), Ajuste Sumar (+), Ajuste Restar (-).
 
-### 6.2 Tipos de Movimiento
+Automáticos: al iniciar producción (descuenta), al cancelar/reponer (reponer), al devolver (reponer).
 
-| Tipo | Cuándo usarlo | Efecto |
-|---|---|---|
-| Ingreso | Llega mercancía nueva | + stock |
-| Salida | Se retira mercancía | − stock |
-| Merma | Producto dañado o pérdida | − stock |
-| Ajuste Sumar | Corregir inventario al alza | + stock |
-| Ajuste Restar | Corregir inventario a la baja | − stock |
-
-### 6.3 Movimientos Automáticos
-
-- Al **iniciar producción** se descuenta inventario automáticamente.
-- Al **cancelar** un pedido en producción se repone el inventario.
-- Al procesar una **devolución** se repone el inventario.
+Stock bajo: naranja. Stock cero: rojo.
 
 ---
 
 ## 7. Gestión de Pedidos
 
-Estados: `issued → pending_payment → payment_under_review → confirmed → in_production → ready → dispatched → delivered`
+issued → pending_payment → payment_under_review → confirmed → in_production → ready → dispatched → delivered
 
-Estados alternos: `pending_stock`, `returned`, `cancelled`.
+Alternos: pending_stock, returned, cancelled.
+
+Cada transición queda registrada en el historial del pedido.
 
 ---
 
 ## 8. Tasa BCV y Precios
 
-- Sincronización automática de lunes a viernes (13:05 UTC) en Render.
-- Fuentes en orden: BCV oficial → DolarAPI → ExchangeRate.host → FALLBACK_BCV_RATE.
-- Se puede registrar tasa manual desde el panel de operación.
-- Los precios base están en USD. El equivalente en VES usa la tasa del día.
-- Cotizaciones y pedidos congelan la tasa al momento de emitirse.
+- Sincronización automática lun-vie 13:05 UTC.
+- Fuentes: BCV oficial / DolarAPI / ExchangeRate.host / FALLBACK_BCV_RATE.
+- Registro manual desde Operación.
+- Precios base en USD. Equivalente VES = USD x tasa.
+- Cotizaciones y pedidos congelan la tasa.
 
 ---
 
 ## 9. Notificaciones
 
-| Canal | Destinatario | Eventos |
-|---|---|---|
-| **Correo** | Cliente | Pedido creado, pago en revisión, confirmado, en producción, despachado, entregado |
-| **Telegram** | Equipo interno | Nuevo pedido, pago recibido, pedido listo, devolución procesada |
+- Correo: al cliente. Eventos: pedido creado, pago en revisión, confirmado, producción, despacho, entrega.
+- Telegram: al grupo interno. Eventos: nuevo pedido, pago a revisar, pedido listo, devolución.
 
-Para configurar: definir en Render las variables `MAIL_*` y `TELEGRAM_*`.
+Telegram configurado. Correo requiere SMTP (SendGrid).
 
 ---
 
-## 10. Seguridad y Buenas Prácticas
+## 10. Seguridad
 
-- Contraseñas con **Argon2** (mínimo 6 caracteres).
-- **JWT en cookies** con CSRF protection.
-- **Content-Security-Policy** activa.
-- **HSTS** en producción.
-- Archivos de comprobantes en bucket **privado** con URLs prefirmadas.
-- Credenciales solo en **Render**, nunca en Vercel ni en Git.
+- Contraseñas con Argon2 (mínimo 6 caracteres).
+- JWT en cookies con CSRF. Tokens: 15 min acceso, 30 días refresh.
+- CSP, HSTS (producción), rate limiting (200/hora).
+- Archivos en bucket privado con URLs prefirmadas.
+- Credenciales solo en Render.
 
 ---
 
@@ -310,11 +208,12 @@ Para configurar: definir en Render las variables `MAIL_*` y `TELEGRAM_*`.
 
 | Problema | Causa | Solución |
 |---|---|---|
-| "Failed to fetch" | Backend caído o CORS | Verificar backend y CORS_ORIGINS |
-| "BCV exchange rate required" | Sin tasa registrada | Sincronizar desde Operación |
-| Sin enlaces de Admin | Usuario sin rol admin | Ejecutar `create-initial-admins` |
-| "Insufficient stock" | Movimiento dejaría negativo | Registrar Ingreso primero |
-| PDF no se descarga | WeasyPrint no disponible | En Render funciona con formato completo |
+| Failed to fetch | Backend caído o CORS | Verificar backend y CORS_ORIGINS |
+| BCV exchange rate required | Sin tasa registrada | Sincronizar desde Operación |
+| Sin enlaces de Admin | Usuario sin rol admin | Ejecutar create-initial-admins |
+| Insufficient stock | Movimiento dejaría negativo | Registrar Ingreso primero |
+| PDF no se descarga | WeasyPrint no disponible | En Render funciona correctamente |
+| No llegan notificaciones | Bot no está en el grupo | Verificar chat ID y membresía del bot |
 
 ---
 
