@@ -1,4 +1,4 @@
-from flask import Flask, jsonify
+﻿from flask import Flask, jsonify
 
 from flask_jwt_extended import get_jwt, get_jwt_identity
 
@@ -42,6 +42,8 @@ def create_app(config_overrides: dict | None = None) -> Flask:
     app.register_blueprint(operations_blueprint, url_prefix="/api/operations")
     _configure_jwt(app)
     register_commands(app)
+    from app.api.common import register_company_routes
+    register_company_routes(app)
 
     with app.app_context():
         try:
@@ -102,3 +104,4 @@ def _register_error_handlers(app: Flask) -> None:
     @app.errorhandler(413)
     def payload_too_large(_error):
         return jsonify(error={"code": "payload_too_large", "message": "Request payload is too large."}), 413
+

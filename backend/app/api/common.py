@@ -1,4 +1,4 @@
-from decimal import Decimal, InvalidOperation
+﻿from decimal import Decimal, InvalidOperation
 
 from flask import jsonify, request
 
@@ -71,3 +71,15 @@ def credit_terms_payload(terms) -> dict | None:
         "is_active": terms.is_active,
         "note": terms.note,
     }
+
+
+def register_company_routes(app):
+    @app.route("/api/company-info")
+    def company_info():
+        from flask import jsonify, current_app
+        return jsonify(
+            bank_name=current_app.config.get("BANK_NAME", "Banco del Cafe"),
+            bank_rif=current_app.config.get("BANK_RIF", "J-1234567890"),
+            bank_phone=current_app.config.get("BANK_PHONE", "0424-1234567"),
+            platform_name=current_app.config.get("PLATFORM_NAME", "Tostaduria"),
+        )

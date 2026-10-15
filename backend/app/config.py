@@ -1,4 +1,4 @@
-import os
+﻿import os
 from pathlib import Path
 from datetime import timedelta
 
@@ -51,6 +51,9 @@ class Config:
     PLATFORM_PHONE = os.getenv("PLATFORM_PHONE", "")
     TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
     TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+    BANK_NAME = os.getenv("BANK_NAME", "Banco del Cafe")
+    BANK_RIF = os.getenv("BANK_RIF", "J-1234567890")
+    BANK_PHONE = os.getenv("BANK_PHONE", "0424-1234567")
     BCV_RATE_URL = os.getenv("BCV_RATE_URL")
     FALLBACK_BCV_RATE = os.getenv("FALLBACK_BCV_RATE")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
@@ -69,3 +72,5 @@ class Config:
         missing = [key for key in required if not config.get(key)]
         if missing:
             raise RuntimeError(f"Missing required configuration: {', '.join(missing)}")
+
+

@@ -103,6 +103,8 @@ table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: .8
 th, td { border-bottom: 1px solid #ded3c6; padding: .75rem .5rem; text-align: left; vertical-align: top; }
 td small { display: block; margin-top: .2rem; }
 .secondary { background: transparent; border: 1px solid #805129; color: #805129; margin-left: .35rem; }
+.bank-info { background: #1e5353; border-radius: .4rem; color: #fff7e9; font-family: Arial, sans-serif; margin-top: .5rem; padding: .6rem .8rem; }
+.bank-info .eyebrow { font-size: .75rem; opacity: .7; text-transform: uppercase; }
 
 .shell {
   align-items: center;
