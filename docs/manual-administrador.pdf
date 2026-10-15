@@ -1,0 +1,83 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 936] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 4680 >>
+stream
+BT /F1 10 Tf 50 780 Td (# Manual del Administrador — Tostaduria Platform) Tj ET
+BT /F1 10 Tf 50 766 Td (**Versión:** 0.1.0 · **Última actualización:** Octubre 2026) Tj ET
+BT /F1 10 Tf 50 752 Td (## Índice) Tj ET
+BT /F1 10 Tf 50 738 Td (1. [Visión General][#1-visión-general]) Tj ET
+BT /F1 10 Tf 50 724 Td (2. [Arquitectura][#2-arquitectura]) Tj ET
+BT /F1 10 Tf 50 710 Td (3. [Roles y Permisos][#3-roles-y-permisos]) Tj ET
+BT /F1 10 Tf 50 696 Td (4. [Flujo Completo del Sistema][#4-flujo-completo-del-sistema]) Tj ET
+BT /F1 10 Tf 50 682 Td (5. [Pantallas y Funcionalidades][#5-pantallas-y-funcionalidades]) Tj ET
+BT /F1 10 Tf 50 668 Td (6. [Gestión de Inventario][#6-gestión-de-inventario]) Tj ET
+BT /F1 10 Tf 50 654 Td (7. [Gestión de Pedidos][#7-gestión-de-pedidos]) Tj ET
+BT /F1 10 Tf 50 640 Td (8. [Tasa BCV y Precios][#8-tasa-bcv-y-precios]) Tj ET
+BT /F1 10 Tf 50 626 Td (9. [Notificaciones][#9-notificaciones]) Tj ET
+BT /F1 10 Tf 50 612 Td (10. [Seguridad y Buenas Prácticas][#10-seguridad-y-buenas-prácticas]) Tj ET
+BT /F1 10 Tf 50 598 Td (11. [Solución de Problemas][#11-solución-de-problemas]) Tj ET
+BT /F1 10 Tf 50 584 Td (## 1. Visión General) Tj ET
+BT /F1 10 Tf 50 570 Td (Tostaduria Platform es un sistema B2B [Business-to-Business] para la gestión comercial y operativa de una tostaduría de ) Tj ET
+BT /F1 10 Tf 50 556 Td (### Propósito) Tj ET
+BT /F1 10 Tf 50 542 Td (- Centralizar las ventas B2B en un solo lugar.) Tj ET
+BT /F1 10 Tf 50 528 Td (- Automatizar cotizaciones, registro de pagos y seguimiento de pedidos.) Tj ET
+BT /F1 10 Tf 50 514 Td (- Proveer al equipo operativo herramientas para gestionar inventario y producción.) Tj ET
+BT /F1 10 Tf 50 500 Td (- Mantener un registro auditable de todas las transacciones.) Tj ET
+BT /F1 10 Tf 50 486 Td (## 2. Arquitectura) Tj ET
+BT /F1 10 Tf 50 472 Td (Navegador → Vercel [React] → Render [Flask API] → PostgreSQL) Tj ET
+BT /F1 10 Tf 50 458 Td (+→ Redis → RQ Worker) Tj ET
+BT /F1 10 Tf 50 444 Td (- **Frontend:** React + TypeScript + Vite, desplegado en Vercel.) Tj ET
+BT /F1 10 Tf 50 430 Td (- **Backend:** API Flask + SQLAlchemy + Alembic, desplegado en Render.) Tj ET
+BT /F1 10 Tf 50 416 Td (- **Base de datos:** PostgreSQL administrada en Render.) Tj ET
+BT /F1 10 Tf 50 402 Td (- **Cache/Tareas:** Redis y RQ para tareas asíncronas [notificaciones, sincronización BCV].) Tj ET
+BT /F1 10 Tf 50 388 Td (- **Almacenamiento:** Cloudflare R2 [S3-compatible] para comprobantes de pago e imágenes de producto.) Tj ET
+BT /F1 10 Tf 50 374 Td (## 3. Roles y Permisos) Tj ET
+BT /F1 10 Tf 50 360 Td (### Permisos detallados por rol) Tj ET
+BT /F1 10 Tf 50 346 Td (## 4. Flujo Completo del Sistema) Tj ET
+BT /F1 10 Tf 50 332 Td (### 4.1 Registro de Cliente) Tj ET
+BT /F1 10 Tf 50 318 Td (1. El cliente entra a la página principal y hace clic en **Ingresar** → **Regístrate**.) Tj ET
+BT /F1 10 Tf 50 304 Td (2. Completa: nombre, correo, contraseña [mínimo 6 caracteres] y teléfono.) Tj ET
+BT /F1 10 Tf 50 290 Td (3. Recibe confirmación y puede iniciar sesión inmediatamente.) Tj ET
+BT /F1 10 Tf 50 276 Td (### 4.2 Perfil Comercial) Tj ET
+BT /F1 10 Tf 50 262 Td (1. Una vez autenticado, el cliente accede a **Mi perfil**.) Tj ET
+BT /F1 10 Tf 50 248 Td (2. Debe completar:) Tj ET
+BT /F1 10 Tf 50 234 Td (- **Datos personales:** nombre, teléfono.) Tj ET
+BT /F1 10 Tf 50 220 Td (- **Empresa:** nombre comercial, RIF, tipo de negocio [cafetería, supermercado, mayorista], responsable, correo y teléfo) Tj ET
+BT /F1 10 Tf 50 206 Td (- **Dirección:** al menos una dirección de entrega.) Tj ET
+BT /F1 10 Tf 50 192 Td (3. Una vez completa la empresa y tiene al menos una dirección, su perfil está listo.) Tj ET
+BT /F1 10 Tf 50 178 Td (### 4.3 Solicitud de Crédito [opcional]) Tj ET
+BT /F1 10 Tf 50 164 Td (1. Desde el perfil, el cliente puede solicitar crédito comercial.) Tj ET
+BT /F1 10 Tf 50 150 Td (2. Selecciona: plazo [7, 15 o 30 días], límite en USD y justificación.) Tj ET
+BT /F1 10 Tf 50 136 Td (3. Un administrador revisa y aprueba/rechaza desde **Administración**.) Tj ET
+BT /F1 10 Tf 50 122 Td (4. Si se aprueba, el cliente puede usar **Crédito aprobado** como condición de pago.) Tj ET
+BT /F1 10 Tf 50 108 Td (### 4.4 Compra) Tj ET
+BT /F1 10 Tf 50 94 Td (1. El cliente navega el **Catálogo**, filtra por Todo, Comercial o Cafeterías.) Tj ET
+BT /F1 10 Tf 50 80 Td (2. Usa el **stepper numérico** para seleccionar cantidad y perfil de tostado [cafeterías].) Tj ET
+BT /F1 10 Tf 50 66 Td (3. Hace clic en **Agregar al carrito** — aparece un mensaje de confirmación con opciones:) Tj ET
+BT /F1 10 Tf 50 52 Td (- **Ir al carrito** → lo lleva al carrito.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000004973 00000 n 
+trailer << /Size 6 /Root 1 0 R >>
+startxref
+5043
+%%EOF
