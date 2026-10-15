@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+﻿from datetime import UTC, datetime
 from decimal import Decimal
 
 from flask import Blueprint, jsonify, request
@@ -56,7 +56,7 @@ def finish_production(order_id: int):
     if order is None: return error("not_found", "Order not found.", 404)
     try: complete_production(order, actor.id, clean_text(json_body().get("note"), 1000) or None)
     except OperationError as exc: return error("production_not_available", str(exc), 422)
-    audit(actor.id, "order.production_completed", "order", order.id); db.session.commit(); return jsonify(order=order_payload(order))
+    audit(actor.id, "order.production_completed", "order", order.id); db.session.commit(); notify_order(order, "ready"); return jsonify(order=order_payload(order))
 
 
 @operations_blueprint.post("/orders/<int:order_id>/dispatch")
@@ -91,7 +91,7 @@ def process_return(order_id: int):
         quantity = parse_decimal(item.get("quantity")) if isinstance(item, dict) else None
         if quantity is None: return error("invalid_return", "Return quantities must be positive.", 422)
         amounts[int(item.get("order_item_id", 0))] = quantity
-    try: restore_inventory(order, actor.id, f"Return: order {order.number} — {reason}", amounts or None)
+    try: restore_inventory(order, actor.id, f"Return: order {order.number} â€” {reason}", amounts or None)
     except OperationError as exc: return error("return_not_available", str(exc), 422)
     order.return_reason = reason; order.returned_at = datetime.now(UTC); transition(order, "returned", actor.id, reason); audit(actor.id, "order.returned", "order", order.id); db.session.commit(); notify_order(order, "returned", internal=True)
     return jsonify(order=order_payload(order))
@@ -124,3 +124,4 @@ def cancel_operational_order(order_id: int):
     order.cancelled_at = datetime.now(UTC); order.cancelled_by_user_id = actor.id; transition(order, "cancelled", actor.id, note or "Order cancelled.")
     if order.credit_usage and order.credit_usage.status == "active": order.credit_usage.status = "released"; order.credit_usage.released_at = datetime.now(UTC); order.credit_usage.released_by_user_id = actor.id; order.credit_usage.release_note = note or "Order cancelled"
     audit(actor.id, "order.cancelled", "order", order.id); db.session.commit(); return jsonify(order=order_payload(order))
+
