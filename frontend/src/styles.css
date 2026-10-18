@@ -212,3 +212,7 @@ h1 {
   .topbar nav { align-items: flex-end; flex-direction: column; gap: .5rem; }
 }
 
+
+.profile-toast { background: #24533a; border-radius: .5rem; bottom: 1.5rem; box-shadow: 0 4px 16px #2b1c1640; color: #eaf6ee; font-family: Arial, sans-serif; font-weight: 700; left: 50%; padding: .75rem 1.25rem; position: fixed; transform: translateX(-50%); z-index: 100; }
+.profile-status { background: #f6dddd; border-radius: .4rem; color: #872d24; font-family: Arial, sans-serif; font-weight: 700; padding: .6rem .9rem; }
+.profile-status--ok { background: #dfebdf; color: #24533a; }

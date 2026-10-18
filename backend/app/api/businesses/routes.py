@@ -24,7 +24,6 @@ def update_profile_status(business: Business) -> None:
         business.business_type,
         business.contact_name,
         business.contact_email,
-        business.contact_phone,
     )
     business.profile_status = "complete" if all(required) and business.addresses else "incomplete"
 
