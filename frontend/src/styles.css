@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   color: #2b1c16;
   background: #3a1f35;
   font-family: Georgia, "Times New Roman", serif;
@@ -103,8 +103,10 @@ table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: .8
 th, td { border-bottom: 1px solid #ded3c6; padding: .75rem .5rem; text-align: left; vertical-align: top; }
 td small { display: block; margin-top: .2rem; }
 .secondary { background: transparent; border: 1px solid #805129; color: #805129; margin-left: .35rem; }
-.bank-info { background: #1e5353; border-radius: .4rem; color: #fff7e9; font-family: Arial, sans-serif; margin-top: .5rem; padding: .6rem .8rem; }
-.bank-info .eyebrow { font-size: .75rem; opacity: .7; text-transform: uppercase; }
+.bank-info { background: #1e5353; border-radius: .5rem; color: #fff7e9; font-family: Arial, sans-serif; margin-top: .5rem; padding: .7rem 1rem; text-align: center; }
+.bank-info .eyebrow { display: block; font-size: .7rem; letter-spacing: .05rem; margin-bottom: .4rem; opacity: .6; text-transform: uppercase; }
+.bank-info p { margin: .25rem 0; }
+.bank-info strong { color: #f1a83c; font-size: .95rem; }
 
 .shell {
   align-items: center;
@@ -209,3 +211,4 @@ h1 {
   .topbar { align-items: flex-start; gap: 1rem; }
   .topbar nav { align-items: flex-end; flex-direction: column; gap: .5rem; }
 }
+
