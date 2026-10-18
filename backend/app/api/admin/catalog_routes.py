@@ -2,7 +2,7 @@ from datetime import date
 from decimal import Decimal
 import re
 
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from flask_jwt_extended import get_current_user
 import requests
 
@@ -13,7 +13,7 @@ from app.models import ExchangeRate, InventoryBalance, InventoryLocation, Invent
 from app.security import audit, roles_required
 from app.services.bcv import BcvRateError, save_exchange_rate, sync_official_bcv_rate
 from app.services.catalog import current_exchange_rate, product_payload, variant_stock
-from app.services.storage import StorageError, create_product_image_upload
+from app.services.storage import StorageError, save_image_file
 
 catalog_admin_blueprint = Blueprint("catalog_admin", __name__)
 PRODUCT_LINES = {"commercial", "cafeteria"}
@@ -94,8 +94,15 @@ def update_product(product_id: int):
 def product_image_upload(product_id: int):
     product = db.session.get(Product, product_id)
     if product is None: return error("not_found", "Product not found.", 404)
-    data = json_body()
-    try: upload = create_product_image_upload(product.id, clean_text(data.get("filename"), 255), clean_text(data.get("content_type"), 100), int(data.get("size_bytes", 0)))
+    file = request.files.get("file")
+    if file is None or not file.filename: return error("invalid_product_image", "A file is required.", 422)
+    file.seek(0, 2); size_bytes = file.tell(); file.seek(0)
+    if size_bytes < 1: return error("invalid_product_image", "File is empty.", 422)
+    try:
+        upload = save_image_file(file.read(), product.id, file.filename, file.content_type or "image/jpeg", size_bytes)
+        product.image_url = upload["public_url"]
+        audit(get_current_user().id, "catalog.product_image_updated", "product", product.id)
+        db.session.commit()
     except (StorageError, ValueError) as exc: return error("invalid_product_image", str(exc), 422)
     return jsonify(upload=upload), 201
 

@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 from decimal import Decimal
 
-from flask import Blueprint, Response, jsonify
+from flask import Blueprint, Response, jsonify, request
 from flask_jwt_extended import get_current_user, jwt_required
 
 from app.api.businesses.routes import current_business
@@ -11,7 +11,7 @@ from app.models import BusinessAddress, CartItem, CreditTerms, CreditUsage, Orde
 from app.security import audit
 from app.services.commerce import DELIVERY_METHODS, CommerceValidationError, cart_summary, get_cart, quote_expiration, required_advance, validate_cart
 from app.services.orders import credit_available, order_payload
-from app.services.storage import StorageError, create_upload, proof_exists, read_url
+from app.services.storage import StorageError, proof_exists, read_url, save_proof_file
 from app.services.documents import render_pdf
 from app.services.notifications import notify_order
 
@@ -130,9 +130,14 @@ def get_order(order_id: int):
 @commerce_blueprint.post("/orders/<int:order_id>/payment-proofs/upload")
 @jwt_required()
 def create_payment_proof_upload(order_id: int):
-    user = get_current_user(); business = current_business(user); order = db.session.get(Order, order_id); data = json_body()
+    user = get_current_user(); business = current_business(user); order = db.session.get(Order, order_id)
     if order is None or business is None or order.business_id != business.id or order.status in {"cancelled", "confirmed"}: return error("payment_not_allowed", "A payment proof cannot be added to this order.", 422)
-    try: upload = create_upload(user.id, clean_text(data.get("filename"), 255), clean_text(data.get("content_type"), 100), int(data.get("size_bytes", 0)))
+    file = request.files.get("file")
+    if file is None or not file.filename: return error("invalid_payment_proof", "A file is required.", 422)
+    content_type = file.content_type or "application/octet-stream"
+    file.seek(0, 2); size_bytes = file.tell(); file.seek(0)
+    if size_bytes < 1: return error("invalid_payment_proof", "File is empty.", 422)
+    try: upload = save_proof_file(file.read(), user.id, file.filename, content_type, size_bytes)
     except (StorageError, ValueError): return error("invalid_payment_proof", "The payment proof cannot be uploaded.", 422)
     return jsonify(upload=upload), 201
 

@@ -18,8 +18,8 @@ export function OrderDetailPage() {
     event.preventDefault(); const form = new FormData(event.currentTarget); const file = form.get("proof") as File;
     if (!file?.size) { setError("Selecciona un comprobante."); return; }
     try {
-      const upload = await apiRequest<{ upload: { key: string; upload_url: string } }>(`/api/orders/${id}/payment-proofs/upload`, { method: "POST", body: JSON.stringify({ filename: file.name, content_type: file.type, size_bytes: file.size }) });
-      const response = await fetch(upload.upload.upload_url, { method: "PUT", headers: { "Content-Type": file.type }, body: file }); if (!response.ok) throw new Error("No fue posible cargar el archivo.");
+      const fileForm = new FormData(); fileForm.append("file", file);
+      const upload = await apiRequest<{ upload: { key: string } }>(`/api/orders/${id}/payment-proofs/upload`, { method: "POST", body: fileForm });
       await apiRequest(`/api/orders/${id}/payment-submissions`, { method: "POST", body: JSON.stringify({ currency: form.get("currency"), amount: form.get("amount"), reference: form.get("reference"), payment_method: form.get("payment_method"), note: form.get("note"), proof_storage_key: upload.upload.key, proof_original_filename: file.name, proof_content_type: file.type, proof_size_bytes: file.size }) });
       event.currentTarget.reset(); setMessage("Comprobante enviado para revisión."); await load();
     } catch (item) { setError(item instanceof Error ? item.message : "No fue posible enviar el comprobante."); }

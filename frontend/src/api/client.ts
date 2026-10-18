@@ -41,7 +41,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   const headers = new Headers(options.headers);
   const method = options.method?.toUpperCase() ?? "GET";
   if (_token) headers.set("Authorization", "Bearer " + _token);
-  if (options.body) headers.set("Content-Type", "application/json");
+  if (options.body && !(options.body instanceof FormData)) headers.set("Content-Type", "application/json");
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
     const csrf = csrfToken();
     if (csrf) headers.set("X-CSRF-TOKEN", csrf);
