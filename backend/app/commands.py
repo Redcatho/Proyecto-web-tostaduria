@@ -89,6 +89,38 @@ def register_commands(app: Flask) -> None:
         db.session.commit()
         click.echo("Seed completado. 6 productos creados.")
 
+    @app.cli.command("fix-prices")
+    def fix_prices() -> None:
+        """Fix product prices and remove 15 kg variants in existing database."""
+        from app.models import Product, ProductVariant, InventoryBalance
+
+        price_fixes = {
+            "cafe-filtrado": "150.00",
+            "cafe-espresso": "220.00",
+            "cafe-premium": "180.00",
+            "cafe-grano-especial": "80.00",
+            "cafe-grano-premium": "90.00",
+            "cafe-organico": "105.00",
+        }
+        remove_skus = {"GRA-002", "PRE-002", "ORG-002"}
+
+        for slug, price in price_fixes.items():
+            product = db.session.scalar(db.select(Product).where(Product.slug == slug))
+            if product is None:
+                click.echo(f"  Producto '{slug}' no encontrado.")
+                continue
+            for variant in list(product.variants):
+                if variant.sku in remove_skus:
+                    for bal in list(variant.balances):
+                        db.session.delete(bal)
+                    db.session.delete(variant)
+                    click.echo(f"  Eliminada variante {variant.sku}")
+                else:
+                    variant.price_usd = Decimal(price)
+                    click.echo(f"  Actualizado {variant.sku}: USD ${price}")
+        db.session.commit()
+        click.echo("Precios actualizados y variantes de 15kg eliminadas.")
+
     @app.cli.command("sync-bcv-rate")
     def sync_bcv_rate() -> None:
         """Fetch and save the current USD/VES rate from the configured BCV source."""
