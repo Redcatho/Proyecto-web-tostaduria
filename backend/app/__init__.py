@@ -90,7 +90,7 @@ def _configure_security_headers(app: Flask) -> None:
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; form-action 'self'"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self' https:; form-action 'self'"
         if app.config.get("ENV") == "production":
             response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         return response
@@ -104,4 +104,5 @@ def _register_error_handlers(app: Flask) -> None:
     @app.errorhandler(413)
     def payload_too_large(_error):
         return jsonify(error={"code": "payload_too_large", "message": "Request payload is too large."}), 413
+
 
