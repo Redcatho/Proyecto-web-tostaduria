@@ -121,6 +121,23 @@ def register_commands(app: Flask) -> None:
         db.session.commit()
         click.echo("Precios actualizados y variantes de 15kg eliminadas.")
 
+    @app.cli.command("set-product-images")
+    def set_product_images() -> None:
+        """Assign public image URLs to all products using the R2 public URL."""
+        from app.models import Product
+
+        public_base = os.getenv("PRODUCT_IMAGE_PUBLIC_URL", "").rstrip("/")
+        if not public_base:
+            click.echo("PRODUCT_IMAGE_PUBLIC_URL is not configured. Set it in environment.")
+            return
+
+        products = db.session.scalars(db.select(Product).order_by(Product.id)).all()
+        for p in products:
+            p.image_url = public_base + "/products/" + str(p.id) + "/image.png"
+            click.echo("  " + p.slug + ": " + p.image_url)
+        db.session.commit()
+        click.echo(str(len(products)) + " productos actualizados con imagen.")
+
     @app.cli.command("sync-bcv-rate")
     def sync_bcv_rate() -> None:
         """Fetch and save the current USD/VES rate from the configured BCV source."""
@@ -129,3 +146,4 @@ def register_commands(app: Flask) -> None:
         except BcvRateError as exc:
             raise click.ClickException(str(exc)) from exc
         click.echo(f"Saved BCV rate {rate.rate_ves} VES for {rate.effective_date.isoformat()}.")
+
