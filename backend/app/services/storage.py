@@ -48,4 +48,5 @@ def create_product_image_upload(product_id: int, filename: str, content_type: st
     suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
     key = f"products/{product_id}/image.{suffix}"
     client = boto3.client("s3", endpoint_url=config["PRODUCT_IMAGE_ENDPOINT"], aws_access_key_id=config["OBJECT_STORAGE_ACCESS_KEY_ID"], aws_secret_access_key=config["OBJECT_STORAGE_SECRET_ACCESS_KEY"], region_name=config.get("OBJECT_STORAGE_REGION", "auto"), config=BotoConfig(signature_version="s3v4"))
-    return {"key": key, "upload_url": client.generate_presigned_url("put_object", Params={"Bucket": config["PRODUCT_IMAGE_BUCKET"], "Key": key, "ContentType": content_type}, ExpiresIn=config["PAYMENT_PROOF_SIGNED_URL_TTL_SECONDS"]), "public_url": f"{config['PRODUCT_IMAGE_ENDPOINT'].rstrip('/')}/{config['PRODUCT_IMAGE_BUCKET']}/{key}"}
+    public_base = config.get("PRODUCT_IMAGE_PUBLIC_URL") or f"{config['PRODUCT_IMAGE_ENDPOINT'].rstrip('/')}/{config['PRODUCT_IMAGE_BUCKET']}"
+    return {"key": key, "upload_url": client.generate_presigned_url("put_object", Params={"Bucket": config["PRODUCT_IMAGE_BUCKET"], "Key": key, "ContentType": content_type}, ExpiresIn=config["PAYMENT_PROOF_SIGNED_URL_TTL_SECONDS"]), "public_url": f"{public_base.rstrip('/')}/{key}"}
