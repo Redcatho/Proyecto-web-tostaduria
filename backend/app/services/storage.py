@@ -17,7 +17,7 @@ def _client():
     required = ("OBJECT_STORAGE_ENDPOINT", "OBJECT_STORAGE_BUCKET", "OBJECT_STORAGE_ACCESS_KEY_ID", "OBJECT_STORAGE_SECRET_ACCESS_KEY")
     if not all(settings.get(key) for key in required):
         raise StorageError("Payment proof storage is not configured.")
-    return boto3.client("s3", endpoint_url=settings["OBJECT_STORAGE_ENDPOINT"], aws_access_key_id=settings["OBJECT_STORAGE_ACCESS_KEY_ID"], aws_secret_access_key=settings["OBJECT_STORAGE_SECRET_ACCESS_KEY"], region_name=settings.get("OBJECT_STORAGE_REGION", "auto"), config=BotoConfig(signature_version="s3v4"))
+    return boto3.client("s3", endpoint_url=str(settings["OBJECT_STORAGE_ENDPOINT"]).strip(), aws_access_key_id=str(settings["OBJECT_STORAGE_ACCESS_KEY_ID"]).strip(), aws_secret_access_key=str(settings["OBJECT_STORAGE_SECRET_ACCESS_KEY"]).strip(), region_name=str(settings.get("OBJECT_STORAGE_REGION", "auto")).strip() or "auto", config=BotoConfig(signature_version="s3v4"))
 
 
 def create_upload(user_id: int, filename: str, content_type: str, size_bytes: int) -> dict:
@@ -62,7 +62,7 @@ def save_image_file(file_bytes: bytes, product_id: int, filename: str, content_t
     if content_type not in ALLOWED_PRODUCT_IMAGE_TYPES or size_bytes < 1 or size_bytes > config["PRODUCT_IMAGE_MAX_BYTES"]: raise StorageError("Only JPG, PNG or WEBP product images within the permitted size are accepted.")
     suffix = filename.rsplit(".", 1)[-1].lower() if "." in filename else "jpg"
     key = f"products/{product_id}/image.{suffix}"
-    client = boto3.client("s3", endpoint_url=config["PRODUCT_IMAGE_ENDPOINT"], aws_access_key_id=config["OBJECT_STORAGE_ACCESS_KEY_ID"], aws_secret_access_key=config["OBJECT_STORAGE_SECRET_ACCESS_KEY"], region_name=config.get("OBJECT_STORAGE_REGION", "auto"), config=BotoConfig(signature_version="s3v4"))
+    client = boto3.client("s3", endpoint_url=str(config["PRODUCT_IMAGE_ENDPOINT"]).strip(), aws_access_key_id=str(config["OBJECT_STORAGE_ACCESS_KEY_ID"]).strip(), aws_secret_access_key=str(config["OBJECT_STORAGE_SECRET_ACCESS_KEY"]).strip(), region_name=str(config.get("OBJECT_STORAGE_REGION", "auto")).strip() or "auto", config=BotoConfig(signature_version="s3v4"))
     client.put_object(Bucket=config["PRODUCT_IMAGE_BUCKET"], Key=key, Body=file_bytes, ContentType=content_type)
     public_base = config.get("PRODUCT_IMAGE_PUBLIC_URL") or f"{config['PRODUCT_IMAGE_ENDPOINT'].rstrip('/')}/{config['PRODUCT_IMAGE_BUCKET']}"
     return {"key": key, "public_url": f"{public_base.rstrip('/')}/{key}"}
