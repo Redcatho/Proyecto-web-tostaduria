@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
-import { apiRequest, getApiHealth } from "./api/client";
+import { apiRequest, getApiHealth, setOnUnauthorized } from "./api/client";
 import { AuthPage } from "./pages/AuthPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CatalogAdminPage } from "./pages/CatalogAdminPage";
@@ -64,6 +64,10 @@ export default function App() {
   const [cartCount, setCartCount] = useState<number>(0);
   const [rate, setRate] = useState<ExchangeRate | null>(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setOnUnauthorized(() => { setUser(null); setCartCount(0); navigate("/ingresar"); });
+  }, []);
 
   useEffect(() => {
     apiRequest<{ user: User }>("/api/auth/me")

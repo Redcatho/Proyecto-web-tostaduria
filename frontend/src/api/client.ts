@@ -1,4 +1,10 @@
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+﻿const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+
+let _onUnauthorized: (() => void) | null = null;
+
+export function setOnUnauthorized(cb: () => void) {
+  _onUnauthorized = cb;
+}
 
 export type ApiHealth = {
   status: "ok";
@@ -29,6 +35,12 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   }
   const response = await fetch(`${apiUrl}${path}`, { ...options, headers, credentials: "include" });
   const data = await response.json().catch(() => ({}));
+  if (response.status === 401 && _onUnauthorized && path !== "/api/auth/login" && path !== "/api/auth/register") {
+    _onUnauthorized();
+  }
+  if (response.status === 401 && _onUnauthorized && path != "/api/auth/login" && path != "/api/auth/register") {
+    _onUnauthorized();
+  }
   if (!response.ok) {
     throw new ApiError(data.error?.message ?? "No fue posible completar la solicitud.", response.status);
   }
@@ -37,6 +49,9 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
 export async function apiDownload(path: string): Promise<Blob> {
   const response = await fetch(`${apiUrl}${path}`, { credentials: "include" });
+  if (response.status === 401 && _onUnauthorized && path != "/api/auth/login" && path != "/api/auth/register") {
+    _onUnauthorized();
+  }
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
     throw new ApiError(data.error?.message ?? "No fue posible descargar el documento.", response.status);
