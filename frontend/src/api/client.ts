@@ -1,6 +1,18 @@
 ﻿const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:5000";
+const TOKEN_KEY = "tostaduria_access_token";
 
 let _onUnauthorized: (() => void) | null = null;
+let _token: string | null = localStorage.getItem(TOKEN_KEY);
+
+export function setAccessToken(token: string) {
+  _token = token;
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearAccessToken() {
+  _token = null;
+  localStorage.removeItem(TOKEN_KEY);
+}
 
 export function setOnUnauthorized(cb: () => void) {
   _onUnauthorized = cb;
@@ -28,6 +40,7 @@ function csrfToken() {
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   const method = options.method?.toUpperCase() ?? "GET";
+  if (_token) headers.set("Authorization", "Bearer " + _token);
   if (options.body) headers.set("Content-Type", "application/json");
   if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
     const csrf = csrfToken();

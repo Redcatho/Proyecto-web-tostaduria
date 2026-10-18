@@ -57,7 +57,8 @@ class Config:
     BCV_RATE_URL = os.getenv("BCV_RATE_URL")
     FALLBACK_BCV_RATE = os.getenv("FALLBACK_BCV_RATE")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", SECRET_KEY)
-    JWT_TOKEN_LOCATION = ["cookies"]
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=60)
     JWT_COOKIE_SECURE = ENV == "production"
     JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "Lax")
     JWT_COOKIE_CSRF_PROTECT = True
@@ -67,7 +68,6 @@ class Config:
     JWT_REFRESH_CSRF_COOKIE_HTTPONLY = False
     JWT_REFRESH_CSRF_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "Lax")
     JWT_REFRESH_CSRF_COOKIE_SECURE = ENV == "production"
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     RATELIMIT_STORAGE_URI = os.getenv("RATELIMIT_STORAGE_URI", "memory://")
     RATELIMIT_DEFAULT = "200 per hour"

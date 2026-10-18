@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
-import { apiRequest, getApiHealth, setOnUnauthorized } from "./api/client";
+import { apiRequest, getApiHealth, setOnUnauthorized, clearAccessToken } from "./api/client";
 import { AuthPage } from "./pages/AuthPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CatalogAdminPage } from "./pages/CatalogAdminPage";

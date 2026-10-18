@@ -2,7 +2,7 @@ import hashlib
 import secrets
 from datetime import UTC, datetime, timedelta
 
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, Response, current_app, jsonify
 from flask_jwt_extended import (
     create_access_token,
     create_refresh_token,
@@ -23,7 +23,7 @@ from app.security import audit, get_role, hash_password, revoke_current_token, v
 auth_blueprint = Blueprint("auth", __name__)
 
 
-def _issue_session(response, user: User) -> None:
+def _issue_session(response, user: User) -> str:
     roles = sorted(role.code for role in user.roles)
     access_token = create_access_token(identity=str(user.id), additional_claims={"roles": roles})
     refresh_token = create_refresh_token(identity=str(user.id), additional_claims={"roles": roles})
@@ -38,6 +38,7 @@ def _issue_session(response, user: User) -> None:
     db.session.commit()
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
+    return access_token
 
 
 @auth_blueprint.post("/register")
@@ -68,7 +69,8 @@ def register():
     db.session.commit()
 
     response = jsonify(user=user_payload(user))
-    _issue_session(response, user)
+    token = _issue_session(response, user)
+    response.set_data(jsonify(user=user_payload(user), access_token=token).get_data())
     return response, 201
 
 
@@ -89,7 +91,8 @@ def login():
     audit(user.id, "user.logged_in", "user", user.id)
     db.session.commit()
     response = jsonify(user=user_payload(user))
-    _issue_session(response, user)
+    token = _issue_session(response, user)
+    response.set_data(jsonify(user=user_payload(user), access_token=token).get_data())
     return response
 
 
@@ -105,7 +108,8 @@ def refresh():
     refresh_record.revoked_at = datetime.now(UTC)
     revoke_current_token()
     response = jsonify(user=user_payload(user))
-    _issue_session(response, user)
+    token = _issue_session(response, user)
+    response.set_data(jsonify(user=user_payload(user), access_token=token).get_data())
     next_refresh = db.session.scalar(
         db.select(RefreshToken).where(RefreshToken.user_id == user.id).order_by(RefreshToken.id.desc())
     )

@@ -2,7 +2,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { apiRequest } from "../api/client";
+import { apiRequest, setAccessToken } from "../api/client";
 import type { User } from "../types";
 
 type Props = { mode: "login" | "register"; onAuthenticated: (user: User) => void };
@@ -21,10 +21,11 @@ export function AuthPage({ mode, onAuthenticated }: Props) {
       const payload = mode === "login"
         ? { email: form.get("email"), password: form.get("password") }
         : { email: form.get("email"), full_name: form.get("full_name"), phone: form.get("phone"), password: form.get("password") };
-      const response = await apiRequest<{ user: User }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
+      const response = await apiRequest<{ user: User; access_token: string }>(`/api/auth/${mode === "login" ? "login" : "register"}`, {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      setAccessToken(response.access_token);
       onAuthenticated(response.user);
       navigate("/");
     } catch (requestError) {
