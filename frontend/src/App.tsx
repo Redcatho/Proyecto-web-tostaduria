@@ -105,7 +105,7 @@ export default function App() {
       <Route path="/registro" element={user ? <Navigate to="/" replace /> : <AuthPage mode="register" onAuthenticated={setUser} />} />
       <Route path="/" element={user ? <Dashboard user={user} rate={rate} /> : <CatalogPage onCartUpdate={refreshCartCount} />} />
       <Route path="/catalogo" element={<CatalogPage authenticated={Boolean(user)} onCartUpdate={refreshCartCount} />} />
-      <Route path="/carrito" element={user ? <CartPage /> : <Navigate to="/ingresar" replace />} />
+      <Route path="/carrito" element={user ? <CartPage onCartUpdate={refreshCartCount} /> : <Navigate to="/ingresar" replace />} />
       <Route path="/cotizar" element={user ? <QuotePage /> : <Navigate to="/ingresar" replace />} />
       <Route path="/cotizaciones/:id" element={user ? <QuoteDetailPage /> : <Navigate to="/ingresar" replace />} />
       <Route path="/pedidos" element={user ? <OrdersPage /> : <Navigate to="/ingresar" replace />} />

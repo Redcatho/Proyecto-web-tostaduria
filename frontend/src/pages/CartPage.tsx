@@ -5,13 +5,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { apiRequest } from "../api/client";
 import type { CartSummary } from "../types";
 
-export function CartPage() {
+export function CartPage({ onCartUpdate }: { onCartUpdate?: () => void }) {
   const navigate = useNavigate(); const [cart, setCart] = useState<CartSummary | null>(null); const [error, setError] = useState(""); const [validating, setValidating] = useState(false);
   const [company, setCompany] = useState<{ bank_name: string; bank_rif: string; bank_phone: string } | null>(null);
   const load = () => apiRequest<{ cart: CartSummary }>("/api/cart").then((result) => setCart(result.cart)).catch((item) => setError(item instanceof Error ? item.message : "No fue posible cargar el carrito."));
+  const refreshBadge = () => { if (onCartUpdate) onCartUpdate(); };
   useEffect(() => { load(); apiRequest<{ bank_name: string; bank_rif: string; bank_phone: string }>("/api/company-info").then((r) => setCompany(r)).catch(() => {}); }, []);
   async function update(itemId: number, quantity: string, note: string | null) { try { const result = await apiRequest<{ cart: CartSummary }>(`/api/cart/items/${itemId}`, { method: "PATCH", body: JSON.stringify({ quantity, customer_note: note }) }); setCart(result.cart); setError(""); } catch (item) { setError(item instanceof Error ? item.message : "No fue posible actualizar."); } }
-  async function remove(itemId: number) { const result = await apiRequest<{ cart: CartSummary }>(`/api/cart/items/${itemId}`, { method: "DELETE" }); setCart(result.cart); }
+  async function remove(itemId: number) { const result = await apiRequest<{ cart: CartSummary }>(`/api/cart/items/${itemId}`, { method: "DELETE" }); setCart(result.cart); refreshBadge(); }
+  async function refresh() { await load(); refreshBadge(); }
   async function validate() { setValidating(true); setError(""); try { const result = await apiRequest<{ cart: CartSummary }>("/api/cart/validate", { method: "POST" }); setCart(result.cart); navigate("/cotizar"); } catch (item) { setError(item instanceof Error ? item.message : "Revisa los productos del carrito."); } finally { setValidating(false); } }
   function step(line: string) { return line === "cafeteria" ? 5 : 1; }
   function stepper(line: string, quantity: string, itemId: number, note: string | null) {
