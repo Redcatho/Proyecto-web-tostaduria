@@ -57,7 +57,7 @@ button:disabled { cursor: not-allowed; opacity: .55; }
 .availability--bajo-pedido { color: #8a5b15; }
 .availability--agotado { color: #872d24; }
 .catalog-login { font-family: Arial, sans-serif; margin: 3rem 0; }
-.cart-shell { align-items: start; display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr) 20rem; margin: 0 auto; max-width: 1180px; padding: 3rem 5vw; }
+.cart-shell { align-items: start; display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr) 22rem; margin: 0 auto; max-width: 1180px; padding: 3rem 5vw; }
 .cart-shell h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); }
 .cart-list { display: grid; gap: .75rem; margin-top: 2rem; }
 .cart-row { background: #fffaf1; border-left: 5px solid #15938a; display: grid; gap: 1rem; grid-template-columns: 8rem minmax(0, 1fr) 10rem; padding: 1rem; }
@@ -103,10 +103,11 @@ table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: .8
 th, td { border-bottom: 1px solid #ded3c6; padding: .75rem .5rem; text-align: left; vertical-align: top; }
 td small { display: block; margin-top: .2rem; }
 .secondary { background: transparent; border: 1px solid #805129; color: #805129; margin-left: .35rem; }
-.bank-info { background: #1e5353; border-radius: .5rem; color: #fff7e9; font-family: Arial, sans-serif; margin-top: 1rem; padding: .8rem 1.2rem; text-align: center; }
-.bank-info .eyebrow { display: block; font-size: .7rem; letter-spacing: .05rem; margin-bottom: .4rem; opacity: .6; text-transform: uppercase; }
-.bank-info p { margin: .25rem 0; }
+.bank-info { background: #1e5353; border-radius: .5rem; color: #e2e8f0; font-family: Arial, sans-serif; margin-top: 1rem; padding: .8rem 1.2rem; text-align: center; }
+.bank-info .eyebrow { color: #e2e8f0; display: block; font-size: .7rem; letter-spacing: .05rem; margin-bottom: .4rem; opacity: .85; text-transform: uppercase; }
+.bank-info p { margin: .35rem 0; }
 .bank-info strong { color: #f1a83c; font-size: .95rem; }
+.ves-line { color: #e2e8f0; font-size: .95rem; margin-top: .5rem; padding: 0 0 .5rem; }
 
 .shell {
   align-items: center;
