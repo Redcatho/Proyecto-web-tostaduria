@@ -97,6 +97,19 @@ def process_return(order_id: int):
     return jsonify(order=order_payload(order))
 
 
+
+@operations_blueprint.post("/orders/<int:order_id>/notify-customer")
+@roles_required("admin", "sales")
+def notify_customer(order_id: int):
+    from app.services.notifications import notify_order
+    actor = get_current_user(); order = _order_or_error(order_id)
+    if order is None: return error("not_found", "Order not found.", 404)
+    if order.status != "ready": return error("notify_not_available", "Only ready orders can be notified to the customer.", 422)
+    notify_order(order, "ready", force_email=True)
+    audit(actor.id, "order.customer_notified", "order", order.id); db.session.commit()
+    return jsonify(message="Customer notified by email.")
+
+
 @operations_blueprint.patch("/orders/<int:order_id>/estimate")
 @roles_required("admin", "sales")
 def set_order_estimate(order_id: int):
@@ -124,4 +137,5 @@ def cancel_operational_order(order_id: int):
     order.cancelled_at = datetime.now(UTC); order.cancelled_by_user_id = actor.id; transition(order, "cancelled", actor.id, note or "Order cancelled.")
     if order.credit_usage and order.credit_usage.status == "active": order.credit_usage.status = "released"; order.credit_usage.released_at = datetime.now(UTC); order.credit_usage.released_by_user_id = actor.id; order.credit_usage.release_note = note or "Order cancelled"
     audit(actor.id, "order.cancelled", "order", order.id); db.session.commit(); return jsonify(order=order_payload(order))
+
 

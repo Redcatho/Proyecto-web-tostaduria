@@ -19,7 +19,7 @@ def _items_summary(order) -> str:
     return ' / '.join(parts) if parts else chr(8212)
 
 
-def notify_order(order, event: str, internal: bool = False) -> None:
+def notify_order(order, event: str, internal: bool = False, force_email: bool = False) -> None:
     number = order.number
     name = _customer_name(order)
     items = _items_summary(order)
@@ -121,8 +121,8 @@ def notify_order(order, event: str, internal: bool = False) -> None:
         if telegram_msg:
             send_telegram(telegram_msg)
 
-    # Send email to customer for all events except internal-only ones
-    if not internal:
+    # Send email to customer for all events except internal-only and manually-triggered ones
+    if not internal and (event not in {'ready'} or force_email):
         recipient = _customer_email(order)
         if recipient and email_subject and email_body:
             send_email(recipient, email_subject, email_body)

@@ -113,7 +113,7 @@ export function CatalogPage({ authenticated = false, onCartUpdate }: { authentic
           </article>
         ))}
       </section>
-      <p className="catalog-login">¿Ya eres cliente? <Link to="/ingresar">Ingresa a tu cuenta</Link> para comprar.</p>
+      {!authenticated && <p className="catalog-login">¿Ya eres cliente? <Link to="/ingresar">Ingresa a tu cuenta</Link> para comprar.</p>}
     </main>
   );
 }
