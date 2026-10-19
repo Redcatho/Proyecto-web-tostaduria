@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 
-import { apiRequest, getApiHealth, setOnUnauthorized, clearAccessToken } from "./api/client";
+import { apiRequest, getApiHealth, setOnUnauthorized, clearAccessToken, resetUnauthorizedFlag } from "./api/client";
 import { AuthPage } from "./pages/AuthPage";
 import { AdminPage } from "./pages/AdminPage";
 import { CatalogAdminPage } from "./pages/CatalogAdminPage";
@@ -63,10 +63,11 @@ export default function App() {
   const [loadingSession, setLoadingSession] = useState(true);
   const [cartCount, setCartCount] = useState<number>(0);
   const [rate, setRate] = useState<ExchangeRate | null>(null);
+  const [sessionToast, setSessionToast] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
-    setOnUnauthorized(() => { setUser(null); setCartCount(0); navigate("/ingresar"); });
+    setOnUnauthorized(() => { setSessionToast("Sesión expirada. Redirigiendo al inicio de sesión…"); clearAccessToken(); setUser(null); setCartCount(0); setTimeout(() => { resetUnauthorizedFlag(); navigate("/ingresar"); }, 2000); });
   }, []);
 
   useEffect(() => {
@@ -100,7 +101,7 @@ export default function App() {
 
   if (loadingSession) return <PlatformStatus />;
   return (
-    <>{user && <Navigation user={user} cartCount={cartCount} onLogout={logout} />}<Routes>
+    <>{sessionToast && <div className="profile-toast" style={{ position: "fixed", bottom: "1.5rem", left: "50%", transform: "translateX(-50%)", zIndex: 100 }}>{sessionToast}</div>}{user && <Navigation user={user} cartCount={cartCount} onLogout={logout} />}<Routes>
       <Route path="/ingresar" element={user ? <Navigate to="/" replace /> : <AuthPage mode="login" onAuthenticated={setUser} />} />
       <Route path="/registro" element={user ? <Navigate to="/" replace /> : <AuthPage mode="register" onAuthenticated={setUser} />} />
       <Route path="/" element={user ? <Dashboard user={user} rate={rate} /> : <CatalogPage onCartUpdate={refreshCartCount} />} />

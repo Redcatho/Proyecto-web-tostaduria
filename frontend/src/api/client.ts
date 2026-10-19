@@ -2,6 +2,7 @@
 const TOKEN_KEY = "tostaduria_access_token";
 
 let _onUnauthorized: (() => void) | null = null;
+let _showingUnauthorized = false;
 let _token: string | null = localStorage.getItem(TOKEN_KEY);
 
 export function setAccessToken(token: string) {
@@ -16,6 +17,10 @@ export function clearAccessToken() {
 
 export function setOnUnauthorized(cb: () => void) {
   _onUnauthorized = cb;
+}
+
+export function resetUnauthorizedFlag() {
+  _showingUnauthorized = false;
 }
 
 export type ApiHealth = {
@@ -37,6 +42,8 @@ function csrfToken() {
     ?.split("=")[1];
 }
 
+const _skip401 = new Set(["/api/auth/login", "/api/auth/register", "/api/health", "/api/catalog/exchange-rates/current"]);
+
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   const method = options.method?.toUpperCase() ?? "GET";
@@ -48,13 +55,12 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   }
   const response = await fetch(`${apiUrl}${path}`, { ...options, headers, credentials: "include" });
   const data = await response.json().catch(() => ({}));
-  if (response.status === 401 && _onUnauthorized && path !== "/api/auth/login" && path !== "/api/auth/register") {
-    _onUnauthorized();
-  }
-  if (response.status === 401 && _onUnauthorized && path != "/api/auth/login" && path != "/api/auth/register") {
+  if (response.status === 401 && _onUnauthorized && !_skip401.has(path) && !_showingUnauthorized) {
+    _showingUnauthorized = true;
     _onUnauthorized();
   }
   if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
     throw new ApiError(data.error?.message ?? "No fue posible completar la solicitud.", response.status);
   }
   return data as T;
@@ -62,7 +68,7 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
 
 export async function apiDownload(path: string): Promise<Blob> {
   const response = await fetch(`${apiUrl}${path}`, { credentials: "include" });
-  if (response.status === 401 && _onUnauthorized && path != "/api/auth/login" && path != "/api/auth/register") {
+  if (response.status === 401 && _onUnauthorized && !_skip401.has(path)) {
     _onUnauthorized();
   }
   if (!response.ok) {
