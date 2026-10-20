@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 
-import { apiRequest } from "../api/client";
+import { apiRequest, ApiError } from "../api/client";
 import type { Business, CreditApplication, CreditTerms, User } from "../types";
 
 type Props = { user: User; onUserUpdated: (user: User) => void };
@@ -77,7 +77,7 @@ export function ProfilePage({ user, onUserUpdated }: Props) {
       setMessage("Solicitud de crédito enviada a administración.");
       showToast("Crédito solicitado ✓");
       event.currentTarget.reset();
-    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "Error al enviar."); }
+    } catch (requestError) { setError(requestError instanceof ApiError ? requestError.message : "Error de conexión. Revisa tu conexión a internet e intenta de nuevo."); }
   }
 
   const complete = business?.profile_status === "complete";

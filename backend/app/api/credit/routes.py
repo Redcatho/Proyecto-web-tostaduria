@@ -48,6 +48,8 @@ def create_credit_application():
     data = json_body()
     requested_days = data.get("requested_days")
     requested_limit = parse_decimal(data.get("requested_limit_usd"))
+    try: requested_days = int(requested_days)
+    except (TypeError, ValueError): requested_days = None
     if requested_days not in VALID_DAYS or requested_limit is None:
         return error("invalid_credit_request", "Choose 7, 15 or 30 days and a positive USD limit.", 422)
     pending = db.session.scalar(
