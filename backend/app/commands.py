@@ -138,6 +138,20 @@ def register_commands(app: Flask) -> None:
         db.session.commit()
         click.echo(str(len(products)) + " productos actualizados con imagen.")
 
+    @app.cli.command("recalculate-profiles")
+    def recalculate_profiles() -> None:
+        """Re-calculate profile_status for all businesses after schema changes."""
+        from app.models import Business
+        from app.api.businesses.routes import update_profile_status
+        businesses = db.session.scalars(db.select(Business)).all()
+        for b in businesses:
+            old = b.profile_status
+            update_profile_status(b)
+            if b.profile_status != old:
+                click.echo(f"  {b.legal_name or b.id}: {old} -> {b.profile_status}")
+        db.session.commit()
+        click.echo(str(len(businesses)) + " negocios revisados.")
+
     @app.cli.command("sync-bcv-rate")
     def sync_bcv_rate() -> None:
         """Fetch and save the current USD/VES rate from the configured BCV source."""

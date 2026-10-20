@@ -55,7 +55,8 @@ export async function apiRequest<T>(path: string, options: RequestInit = {}): Pr
   }
   const response = await fetch(`${apiUrl}${path}`, { ...options, headers, credentials: "include" });
   const data = await response.json().catch(() => ({}));
-  if (response.status === 401 && _onUnauthorized && !_skip401.has(path) && !_showingUnauthorized) {
+  // On 401 only redirect on GET/HEAD (page loads). POST/PATCH etc. (user actions) just throw.
+  if (response.status === 401 && _onUnauthorized && !_skip401.has(path) && !_showingUnauthorized && (!options.method || options.method === "GET" || options.method === "HEAD")) {
     _showingUnauthorized = true;
     _onUnauthorized();
   }
