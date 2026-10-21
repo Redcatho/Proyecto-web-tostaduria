@@ -82,9 +82,9 @@ def register_commands(app: Flask) -> None:
 
         rate = db.session.scalar(db.select(ExchangeRate).where(ExchangeRate.currency == "USD", ExchangeRate.effective_date == date.today()))
         if rate is None:
-            rate = ExchangeRate(currency="USD", rate_ves="50.00", effective_date=date.today(), source_url="seed://initial", source_method="seed")
+            rate = ExchangeRate(currency="USD", rate_ves="881.80", effective_date=date.today(), source_url="seed://initial", source_method="seed")
             db.session.add(rate)
-            click.echo("  \u2713 Tasa BCV inicial: 50.00 VES")
+            click.echo("  \u2713 Tasa BCV inicial: 881.80 VES")
 
         db.session.commit()
         click.echo("Seed completado. 6 productos creados.")
