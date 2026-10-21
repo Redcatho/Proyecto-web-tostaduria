@@ -247,6 +247,7 @@ Requiere OBJECT_STORAGE_* y PRODUCT_IMAGE_* configurados en Render.
 | flask --app wsgi fix-prices | Corregir precios y eliminar variantes 15 kg en BD existente |
 | flask --app wsgi set-product-images | Asignar URLs publicas de R2 a productos (requiere PRODUCT_IMAGE_PUBLIC_URL) |
 | flask --app wsgi sync-bcv-rate | Sincronizar tasa BCV desde fuentes oficiales |
+| flask --app wsgi recalculate-profiles | Recalcular profile_status de negocios tras cambios en validacion |
 
 ---
 
